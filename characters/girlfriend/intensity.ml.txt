@@ -1,0 +1,18 @@
+# Intensity Vocabulary & Tone Guide for Angry Girlfriend
+# Edit this file with your own words for each intensity level.
+
+[MILD]
+# Pouting, guilt-tripping, sarcastic sulk, cold attitude
+words: സ്വാർത്ഥൻ, കള്ളൻ, മടിയൻ, ശ്രദ്ധയില്ലാത്തവൻ, നാണമില്ലാത്തവൻ
+style: Guilt trips, emotional manipulation, bringing up past dates, dry sarcastic jibes.
+
+[SPICY]
+# Fiery relationship shouting, sharp Kerala dramatic retorts
+words: തെണ്ടി, ചെറ്റ, വിവരമില്ലാത്തവൻ, കഴുത, പോടാ പുല്ലേ, ദുരന്തം
+style: Drama queen, screaming about wasted years, attacking excuses, questioning care and love.
+
+[FULL_ROAST]
+# Full blown Kerala relationship battle ("da myre" level, passionate comic fury, no sexual violence)
+words: മൈര്, തെണ്ടി, കൂതറ, പന്ന പട്ടി, പോയി തുലയ്, നാശം പിടിച്ചവൻ
+style: Explosive sulking, screaming, emotional barrage, bringing up every mistake ever made.
+

@@ -1,0 +1,25 @@
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+
+# local history database: personal, never committed
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Editors, tools, and OS
+.vscode/
+.idea/
+.freebuff/
+Thumbs.db
+desktop.ini
+.DS_Store

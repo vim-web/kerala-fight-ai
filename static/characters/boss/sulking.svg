@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="100%" height="100%">
+  <!-- Background Glow -->
+  <radialGradient id="bossSulkAura" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#64748b" stop-opacity="0.3"/>
+    <stop offset="100%" stop-color="#334155" stop-opacity="0"/>
+  </radialGradient>
+  <circle cx="120" cy="120" r="110" fill="url(#bossSulkAura)"/>
+
+  <!-- Slouched Suit / Crossed Arms Silhouette -->
+  <path d="M35 230 C45 175, 70 165, 120 165 C170 165, 195 175, 205 230 Z" fill="#1e293b"/>
+  <path d="M60 215 C85 200, 155 200, 180 215 C170 235, 70 235, 60 215 Z" fill="#0f172a"/>
+  <polygon points="120,168 100,190 120,205 140,190" fill="#f8fafc"/>
+  <polygon points="117,190 123,190 125,225 115,225" fill="#dc2626"/>
+
+  <!-- Neck -->
+  <rect x="104" y="142" width="32" height="28" fill="#e0a97a"/>
+
+  <!-- Head turned slightly sideways -->
+  <ellipse cx="116" cy="106" rx="52" ry="58" fill="#f3be94"/>
+
+  <!-- Hair -->
+  <path d="M64 96 C64 53, 86 41, 116 41 C146 41, 168 53, 168 96 C168 101, 164 81, 146 69 C131 63, 101 63, 86 69 C68 81, 64 101, 64 96 Z" fill="#1e293b"/>
+  <ellipse cx="64" cy="111" rx="8" ry="14" fill="#e0a97a"/>
+  <ellipse cx="168" cy="111" rx="8" ry="14" fill="#e0a97a"/>
+
+  <!-- Grumpy Brow -->
+  <path d="M78 88 L108 94" stroke="#0f172a" stroke-width="5" stroke-linecap="round"/>
+  <path d="M154 94 L124 94" stroke="#0f172a" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- Glasses -->
+  <rect x="76" y="94" width="34" height="24" rx="5" fill="none" stroke="#334155" stroke-width="3.5"/>
+  <rect x="122" y="94" width="34" height="24" rx="5" fill="none" stroke="#334155" stroke-width="3.5"/>
+  <line x1="110" y1="104" x2="122" y2="104" stroke="#334155" stroke-width="3.5"/>
+
+  <!-- Side-Eye / Sulking Gaze -->
+  <ellipse cx="93" cy="106" rx="6" ry="6" fill="#ffffff"/>
+  <circle cx="89" cy="106" r="3.5" fill="#0f172a"/>
+  <ellipse cx="139" cy="106" rx="6" ry="6" fill="#ffffff"/>
+  <circle cx="135" cy="106" r="3.5" fill="#0f172a"/>
+
+  <!-- Nose -->
+  <path d="M116 103 L111 123 L121 123" fill="none" stroke="#c88a58" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Frowning Mustache -->
+  <path d="M92 134 C104 130, 114 134, 116 136 C118 134, 128 130, 140 134 C142 142, 130 144, 116 141 C102 144, 90 142, 92 134 Z" fill="#0f172a"/>
+
+  <!-- Sulking Downturned Mouth -->
+  <path d="M102 153 Q116 145 130 153" fill="none" stroke="#581c1c" stroke-width="4.5" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="100%" height="100%">
+  <!-- Background Glow -->
+  <radialGradient id="gfSulkAura" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#8b5cf6" stop-opacity="0.3"/>
+    <stop offset="100%" stop-color="#6d28d9" stop-opacity="0"/>
+  </radialGradient>
+  <circle cx="120" cy="120" r="110" fill="url(#gfSulkAura)"/>
+
+  <!-- Back Hair (Turned body silhouette) -->
+  <path d="M45 100 C35 160, 40 220, 55 240 L175 240 C190 220, 195 160, 185 100 C180 50, 50 50, 45 100 Z" fill="#09090b"/>
+
+  <!-- Body with Crossed Arms -->
+  <path d="M50 240 C60 180, 80 165, 115 165 C150 165, 170 180, 180 240 Z" fill="#e11d48"/>
+  <path d="M70 215 C90 198, 140 198, 160 215 C150 235, 80 235, 70 215 Z" fill="#9f1239"/>
+
+  <!-- Neck -->
+  <rect x="104" y="135" width="24" height="35" fill="#e6a479"/>
+
+  <!-- Head turned sideways -->
+  <ellipse cx="112" cy="108" rx="46" ry="52" fill="#f6be96"/>
+
+  <!-- Pouting flushed cheeks -->
+  <ellipse cx="78" cy="124" rx="14" ry="7" fill="#fb7185" opacity="0.35"/>
+  <ellipse cx="146" cy="124" rx="14" ry="7" fill="#fb7185" opacity="0.35"/>
+
+  <!-- Front Hair -->
+  <path d="M48 95 C48 45, 74 32, 112 32 C152 32, 178 45, 178 95 C172 65, 148 55, 112 58 C78 55, 54 65, 48 95 Z" fill="#18181b"/>
+  <path d="M48 95 C55 135, 68 160, 72 180 C66 150, 58 120, 52 95 Z" fill="#18181b"/>
+
+  <!-- Earrings -->
+  <circle cx="64" cy="132" r="3" fill="#facc15"/>
+  <path d="M59 136 Q64 144 69 136 Z" fill="#eab308"/>
+
+  <!-- Bindi -->
+  <circle cx="112" cy="85" r="2.5" fill="#dc2626"/>
+
+  <!-- Sulking Furrowed Brows -->
+  <path d="M78 88 L104 94" stroke="#09090b" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M146 94 L120 94" stroke="#09090b" stroke-width="4.5" stroke-linecap="round"/>
+
+  <!-- Disdainful Half-Closed / Side-eye Gaze -->
+  <path d="M76 102 Q89 97 102 102" fill="none" stroke="#09090b" stroke-width="3" stroke-linecap="round"/>
+  <path d="M78 103 Q89 110 100 103" fill="#ffffff"/>
+  <circle cx="85" cy="104" r="3" fill="#27272a"/>
+
+  <path d="M120 102 Q133 97 146 102" fill="none" stroke="#09090b" stroke-width="3" stroke-linecap="round"/>
+  <path d="M122 103 Q133 110 144 103" fill="#ffffff"/>
+  <circle cx="129" cy="104" r="3" fill="#27272a"/>
+
+  <!-- Dainty Nose -->
+  <path d="M112 102 L109 118 L115 118" fill="none" stroke="#c88a58" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Pouting Dramatic Lips (Downturned sulk) -->
+  <path d="M96 142 Q112 135 128 142" fill="none" stroke="#be123c" stroke-width="4" stroke-linecap="round"/>
+  <path d="M102 144 Q112 149 122 144" fill="none" stroke="#be123c" stroke-width="3" stroke-linecap="round"/>
+</svg>

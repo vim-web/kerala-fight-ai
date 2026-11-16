@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="100%" height="100%">
+  <!-- Background Glow -->
+  <radialGradient id="gfAngAura" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#f43f5e" stop-opacity="0.35"/>
+    <stop offset="100%" stop-color="#e11d48" stop-opacity="0"/>
+  </radialGradient>
+  <circle cx="120" cy="120" r="110" fill="url(#gfAngAura)"/>
+
+  <!-- Back Hair (Long flows) -->
+  <path d="M50 100 C40 160, 45 220, 60 240 L180 240 C195 220, 200 160, 190 100 C185 50, 55 50, 50 100 Z" fill="#09090b"/>
+
+  <!-- Body / Kurti with Gold border -->
+  <path d="M55 240 C65 180, 85 165, 120 165 C155 165, 175 180, 185 240 Z" fill="#e11d48"/>
+  <path d="M100 165 C110 185, 130 185, 140 165 Z" fill="#facc15"/>
+
+  <!-- Neck -->
+  <rect x="108" y="135" width="24" height="35" fill="#e6a479"/>
+
+  <!-- Head -->
+  <ellipse cx="120" cy="108" rx="46" ry="52" fill="#f6be96"/>
+  <!-- Angry Flush -->
+  <ellipse cx="85" cy="122" rx="14" ry="7" fill="#fb7185" opacity="0.45"/>
+  <ellipse cx="155" cy="122" rx="14" ry="7" fill="#fb7185" opacity="0.45"/>
+
+  <!-- Front Hair Styles / Bangs -->
+  <path d="M55 95 C55 45, 80 32, 120 32 C160 32, 185 45, 185 95 C180 65, 155 55, 120 58 C85 55, 60 65, 55 95 Z" fill="#18181b"/>
+  <path d="M55 95 C62 135, 75 160, 80 180 C74 150, 66 120, 60 95 Z" fill="#18181b"/>
+  <path d="M185 95 C178 135, 165 160, 160 180 C166 150, 174 120, 180 95 Z" fill="#18181b"/>
+
+  <!-- Ears & Jhumka Earrings -->
+  <ellipse cx="72" cy="118" rx="6" ry="11" fill="#e6a479"/>
+  <ellipse cx="168" cy="118" rx="6" ry="11" fill="#e6a479"/>
+  <!-- Jhumka Left -->
+  <circle cx="71" cy="132" r="3" fill="#facc15"/>
+  <path d="M66 136 Q71 144 76 136 Z" fill="#eab308"/>
+  <!-- Jhumka Right -->
+  <circle cx="169" cy="132" r="3" fill="#facc15"/>
+  <path d="M164 136 Q169 144 174 136 Z" fill="#eab308"/>
+
+  <!-- Bindi -->
+  <circle cx="120" cy="85" r="2.5" fill="#dc2626"/>
+
+  <!-- Fierce Lowered Brows -->
+  <path d="M86 92 L112 102" stroke="#09090b" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M154 92 L128 102" stroke="#09090b" stroke-width="4.5" stroke-linecap="round"/>
+
+  <!-- Dramatic Eyeliner Eyes (Fierce glare) -->
+  <path d="M84 105 Q98 97 112 106" fill="none" stroke="#09090b" stroke-width="3" stroke-linecap="round"/>
+  <ellipse cx="98" cy="106" rx="6" ry="6" fill="#ffffff"/>
+  <circle cx="100" cy="106" r="3.5" fill="#27272a"/>
+  <circle cx="98" cy="104" r="1.2" fill="#ffffff"/>
+
+  <path d="M156 105 Q142 97 128 106" fill="none" stroke="#09090b" stroke-width="3" stroke-linecap="round"/>
+  <ellipse cx="142" cy="106" rx="6" ry="6" fill="#ffffff"/>
+  <circle cx="140" cy="106" r="3.5" fill="#27272a"/>
+  <circle cx="138" cy="104" r="1.2" fill="#ffffff"/>
+
+  <!-- Dainty Nose -->
+  <path d="M120 102 L117 118 L123 118" fill="none" stroke="#c88a58" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Shouting Angry Mouth with sharp teeth -->
+  <path d="M102 134 Q120 128 138 134 Q134 154 120 154 Q106 154 102 134 Z" fill="#881337" stroke="#4c0519" stroke-width="2"/>
+  <path d="M106 135 L134 135" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+  <ellipse cx="120" cy="148" rx="8" ry="4" fill="#f43f5e"/>
+
+  <!-- Angry Anger Cross Mark (Anime/Comic Style) -->
+  <path d="M152 64 L162 64 M157 59 L157 69" stroke="#dc2626" stroke-width="3" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="100%" height="100%">
+  <!-- Background Glow -->
+  <radialGradient id="bossShockAura" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.3"/>
+    <stop offset="100%" stop-color="#0284c7" stop-opacity="0"/>
+  </radialGradient>
+  <circle cx="120" cy="120" r="110" fill="url(#bossShockAura)"/>
+
+  <!-- Suit / Body -->
+  <path d="M40 230 C50 170, 70 160, 120 160 C170 160, 190 170, 200 230 Z" fill="#1e293b"/>
+  <polygon points="120,165 95,190 120,215 145,190" fill="#f8fafc"/>
+  <polygon points="116,190 124,190 127,240 113,240" fill="#dc2626"/>
+
+  <!-- Neck -->
+  <rect x="104" y="140" width="32" height="30" fill="#e0a97a"/>
+
+  <!-- Head -->
+  <ellipse cx="120" cy="105" rx="52" ry="58" fill="#f3be94"/>
+
+  <!-- Hair -->
+  <path d="M68 95 C68 52, 90 40, 120 40 C150 40, 172 52, 172 95 C172 100, 168 80, 150 68 C135 62, 105 62, 90 68 C72 80, 68 100, 68 95 Z" fill="#1e293b"/>
+  <ellipse cx="68" cy="110" rx="8" ry="14" fill="#e0a97a"/>
+  <ellipse cx="172" cy="110" rx="8" ry="14" fill="#e0a97a"/>
+
+  <!-- High Raised Shocked Brows -->
+  <path d="M82 78 Q97 68 112 78" fill="none" stroke="#0f172a" stroke-width="5" stroke-linecap="round"/>
+  <path d="M158 78 Q143 68 128 78" fill="none" stroke="#0f172a" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- Glasses Frame -->
+  <rect x="80" y="86" width="34" height="26" rx="5" fill="none" stroke="#334155" stroke-width="3.5"/>
+  <rect x="126" y="86" width="34" height="26" rx="5" fill="none" stroke="#334155" stroke-width="3.5"/>
+  <line x1="114" y1="97" x2="126" y2="97" stroke="#334155" stroke-width="3.5"/>
+
+  <!-- Wide Popping Eyes -->
+  <ellipse cx="97" cy="99" rx="10" ry="10" fill="#ffffff" stroke="#334155" stroke-width="1.5"/>
+  <circle cx="97" cy="99" r="3.5" fill="#0f172a"/>
+  <ellipse cx="143" cy="99" rx="10" ry="10" fill="#ffffff" stroke="#334155" stroke-width="1.5"/>
+  <circle cx="143" cy="99" r="3.5" fill="#0f172a"/>
+
+  <!-- Sweat Drops -->
+  <ellipse cx="168" cy="85" rx="4" ry="7" fill="#38bdf8"/>
+  <path d="M168 78 L164 85 L172 85 Z" fill="#38bdf8"/>
+
+  <!-- Nose -->
+  <path d="M120 102 L115 120 L125 120" fill="none" stroke="#c88a58" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Dropped Mustache -->
+  <path d="M96 128 C108 124, 118 128, 120 130 C122 128, 132 124, 144 128 C146 136, 134 138, 120 134 C106 138, 94 136, 96 128 Z" fill="#0f172a"/>
+
+  <!-- Open Jaw / Shock 'O' Mouth -->
+  <ellipse cx="120" cy="150" rx="14" ry="18" fill="#581c1c" stroke="#7f1d1d" stroke-width="2.5"/>
+</svg>

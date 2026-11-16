@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+httpx
+python-dotenv
+edge-tts
+pytest  # only used by the tests
