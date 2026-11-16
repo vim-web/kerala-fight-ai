@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+  <meta name="theme-color" content="#07060d">
+  <meta name="description" content="Fight with human-like Kerala AI characters in Malayalam, Manglish or English.">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Kerala Fight">
+  <title>Kerala Fight AI</title>
+  <link rel="manifest" href="static/manifest.json">
+  <link rel="icon" href="static/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="static/icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Malayalam:wght@400;600;700&family=Russo+One&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="static/styles.css?v=4">
+</head>
+
+<body>
+  <div class="bg-fx" aria-hidden="true">
+    <div class="bg-grid"></div>
+    <div class="bg-glow g1"></div>
+    <div class="bg-glow g2"></div>
+  </div>
+
+  <!-- ============ SELECT SCREEN ============ -->
+  <section class="screen select-screen is-active" id="selectScreen" aria-labelledby="selectTitle">
+    <header class="select-top">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="18" height="18">
+            <path fill="currentColor" d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" />
+          </svg>
+        </span>
+        <span class="brand-name">KERALA <b>FIGHT</b></span>
+      </div>
+      <div class="top-actions">
+        <button class="model-chip" id="modelChipSelect" type="button" aria-label="Model in use. Open settings.">
+          <span class="dot"></span><span class="model-label">…</span>
+        </button>
+        <button class="icon-btn" data-open-settings type="button" aria-label="Settings">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="select-body">
+      <div class="select-hero">
+        <p class="eyebrow">Live Malayalam roast battle</p>
+        <h1 id="selectTitle" class="select-title">Choose your <span>opponent</span></h1>
+      </div>
+
+      <div class="fighter-grid" role="radiogroup" aria-label="Opponent">
+        <button class="fighter-card is-selected" type="button" role="radio" aria-checked="true" data-char="boss">
+          <span class="fc-glow" aria-hidden="true"></span>
+          <span class="fc-portrait"><img src="static/characters/boss/angry.svg" alt="" width="160" height="160"></span>
+          <span class="fc-info">
+            <span class="fc-name">Angry Boss</span>
+            <span class="fc-tag">Reports. Deadlines. Zero patience.</span>
+            <span class="fc-stats" aria-hidden="true">
+              <span class="stat"><i>RAGE</i><b style="--v:.95"></b></span>
+              <span class="stat"><i>SARCASM</i><b style="--v:.7"></b></span>
+              <span class="stat"><i>DRAMA</i><b style="--v:.45"></b></span>
+            </span>
+          </span>
+          <span class="fc-check" aria-hidden="true">✓</span>
+        </button>
+        <button class="fighter-card" type="button" role="radio" aria-checked="false" data-char="girlfriend">
+          <span class="fc-glow" aria-hidden="true"></span>
+          <span class="fc-portrait"><img src="static/characters/girlfriend/angry.svg" alt="" width="160"
+              height="160"></span>
+          <span class="fc-info">
+            <span class="fc-name">Angry Girlfriend</span>
+            <span class="fc-tag">Remembers everything. Forgives nothing.</span>
+            <span class="fc-stats" aria-hidden="true">
+              <span class="stat"><i>RAGE</i><b style="--v:.75"></b></span>
+              <span class="stat"><i>SARCASM</i><b style="--v:.9"></b></span>
+              <span class="stat"><i>DRAMA</i><b style="--v:1"></b></span>
+            </span>
+          </span>
+          <span class="fc-check" aria-hidden="true">✓</span>
+        </button>
+      </div>
+
+      <div class="option-block">
+        <span class="option-label" id="intLabel">Heat</span>
+        <div class="segmented" role="radiogroup" aria-labelledby="intLabel" data-group="intensity">
+          <button type="button" role="radio" data-value="1"
+            aria-checked="false"><b>Mild</b><small>sarcastic</small></button>
+          <button type="button" role="radio" data-value="2" aria-checked="true"
+            class="is-on"><b>Spicy</b><small>everyday fury</small></button>
+          <button type="button" role="radio" data-value="3" aria-checked="false"><b>Full roast</b><small>da myre
+              level</small></button>
+        </div>
+      </div>
+
+      <div class="option-block">
+        <span class="option-label" id="langLabel">Language</span>
+        <div class="segmented" role="radiogroup" aria-labelledby="langLabel" data-group="lang">
+          <button type="button" role="radio" data-value="ml" aria-checked="true" class="is-on"><b
+              class="ml">മലയാളം</b></button>
+          <button type="button" role="radio" data-value="manglish" aria-checked="false"><b>Manglish</b></button>
+          <button type="button" role="radio" data-value="en" aria-checked="false"><b>English</b></button>
+        </div>
+      </div>
+    </div>
+
+    <footer class="select-footer">
+      <button class="btn-fight" id="fightBtn" type="button">
+        <span>FIGHT</span>
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path fill="currentColor" d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" />
+        </svg>
+      </button>
+      <p class="fine-print">Comic roasts only. No slurs, no family, religion, caste or body attacks. Say <b>"i win"</b>
+        to end a round.</p>
+    </footer>
+  </section>
+
+  <!-- ============ FIGHT SCREEN ============ -->
+  <section class="screen fight-screen" id="fightScreen" aria-label="Fight">
+    <header class="hud">
+      <button class="icon-btn hud-back" id="backBtn" type="button" aria-label="Back to opponent select">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
+
+      <div class="hud-side hud-you">
+        <span class="hud-name">YOU</span>
+        <span class="hud-wins" id="winPips" aria-label="Rounds won">
+          <i></i><i></i><i></i>
+        </span>
+      </div>
+
+      <div class="hud-center">
+        <span class="hud-round" id="roundLabel">ROUND 1</span>
+        <span class="hud-vs">VS</span>
+      </div>
+
+      <div class="hud-side hud-foe">
+        <span class="hud-name" id="foeName">ANGRY BOSS</span>
+        <div class="rage-bar" role="meter" aria-label="Rage" aria-valuemin="0" aria-valuemax="10" aria-valuenow="9"
+          id="rageBar">
+          <div class="rage-fill" id="rageFill"></div>
+          <div class="rage-ticks" aria-hidden="true"></div>
+        </div>
+        <span class="hud-rage-num"><span id="rageNum">9</span><small>/10 RAGE</small></span>
+      </div>
+
+      <button class="icon-btn hud-settings" data-open-settings type="button" aria-label="Settings">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" />
+        </svg>
+      </button>
+    </header>
+
+    <div class="arena">
+      <div class="stage" id="stage" data-state="idle">
+        <div class="stage-ring" aria-hidden="true"></div>
+        <div class="stage-floor" aria-hidden="true"></div>
+        <img class="fighter-img" id="fighterImg" src="static/characters/boss/angry.svg" alt="Angry Boss" width="240"
+          height="240">
+        <div class="float-layer" id="floatLayer" aria-hidden="true"></div>
+        <div class="stage-meta">
+          <span class="state-chip" id="stateChip" role="status" aria-live="polite"><span class="dot"></span><span
+              id="stateText">Ready</span></span>
+          <button class="model-chip" id="modelChipFight" type="button" aria-label="Model in use. Open settings.">
+            <span class="dot"></span><span class="model-label">…</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="chat-col">
+        <main class="chat" id="chat" aria-live="polite" aria-label="Conversation">
+          <div class="chat-inner" id="log"></div>
+        </main>
+
+        <footer class="dock">
+          <div class="chips" id="chips" role="toolbar" aria-label="Quick replies"></div>
+          <form class="composer" id="composer" autocomplete="off">
+            <button class="btn-mic" id="micBtn" type="button" aria-label="Hold a voice fight: tap to speak">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.3"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="9" y="2" width="6" height="12" rx="3" />
+                <path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v4" />
+              </svg>
+            </button>
+            <label class="sr-only" for="msgInput">Your comeback</label>
+            <input id="msgInput" type="text" enterkeyhint="send" maxlength="1000" placeholder="Fire back…"
+              autocomplete="off" autocorrect="off" spellcheck="false">
+            <button class="btn-send" id="sendBtn" type="submit" aria-label="Send">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </button>
+            <button class="btn-stop" id="stopBtn" type="button" aria-label="Stop" hidden>
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                <rect x="5" y="5" width="14" height="14" rx="3" fill="currentColor" />
+              </svg>
+              <span>STOP</span>
+            </button>
+          </form>
+        </footer>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ANNOUNCER ============ -->
+  <div class="announcer" id="announcer" aria-hidden="true"><span id="announcerText"></span></div>
+
+  <!-- ============ ROUND OVER ============ -->
+  <div class="overlay" id="roundOver" hidden>
+    <div class="ko-card" role="dialog" aria-modal="true" aria-labelledby="koTitle">
+      <div class="ko-burst" aria-hidden="true">K.O.</div>
+      <h2 id="koTitle" class="ko-title">YOU WIN</h2>
+      <p class="ko-sub" id="koSub">Round 1 goes to you</p>
+      <figure class="ko-quote">
+        <img id="koImg" src="static/characters/boss/sulking.svg" alt="" width="72" height="72">
+        <blockquote id="koLine"></blockquote>
+      </figure>
+      <div class="ko-actions">
+        <button class="btn-primary" id="rematchBtn" type="button">Next round</button>
+        <button class="btn-ghost" id="koChangeBtn" type="button">Change opponent</button>
+        <button class="btn-link" id="koReviewBtn" type="button">Review chat</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ SETTINGS SHEET ============ -->
+  <div class="sheet-backdrop" id="sheetBackdrop" hidden></div>
+  <aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" aria-hidden="true" inert>
+    <div class="sheet-grab" aria-hidden="true"></div>
+    <div class="sheet-head">
+      <h3 id="sheetTitle">Settings</h3>
+      <button class="icon-btn" id="sheetClose" type="button" aria-label="Close settings">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4"
+          stroke-linecap="round">
+          <path d="M6 6l12 12M18 6 6 18" />
+        </svg>
+      </button>
+    </div>
+    <div class="sheet-body">
+      <div class="set-group">
+        <span class="set-label" id="modelLabel">Model</span>
+        <div class="segmented" role="radiogroup" aria-labelledby="modelLabel" data-group="model">
+          <button type="button" role="radio" data-value="gemini" aria-checked="false"><b>Cloud</b><small
+              id="cloudSub">Gemini</small></button>
+          <button type="button" role="radio" data-value="ollama" aria-checked="false"><b>Local</b><small
+              id="localSub">Ollama</small></button>
+        </div>
+        <p class="set-hint" id="modelHint"></p>
+      </div>
+
+      <div class="set-group">
+        <div class="set-row">
+          <span class="set-label">Voice replies</span>
+          <label class="switch"><input type="checkbox" id="voiceToggle" checked><span></span><b class="sr-only">Voice
+              replies</b></label>
+        </div>
+        <div class="segmented" role="radiogroup" aria-label="Voice engine" data-group="tts">
+          <button type="button" role="radio" data-value="edge" aria-checked="true"
+            class="is-on"><b>Neural</b><small>Edge voices</small></button>
+          <button type="button" role="radio" data-value="google"
+            aria-checked="false"><b>Google</b><small>fallback</small></button>
+          <button type="button" role="radio" data-value="browser"
+            aria-checked="false"><b>Device</b><small>offline</small></button>
+        </div>
+      </div>
+
+      <div class="set-group">
+        <label class="set-label" for="passcodeInput">Network passcode</label>
+        <input id="passcodeInput" class="field" type="password" inputmode="numeric"
+          placeholder="Only needed on your phone" autocomplete="off">
+      </div>
+
+      <div class="set-group set-actions">
+        <button class="btn-ghost" id="restartBtn" type="button">Restart round</button>
+        <a class="btn-ghost" id="exportBtn" href="/api/history/export" download>Export history</a>
+        <button class="btn-danger" id="resetWinsBtn" type="button">Reset wins</button>
+      </div>
+      <p class="set-hint">Cloud mode sends your messages to Google's Gemini API. Voice uses Microsoft Edge's online
+        voices. API keys stay on the server.</p>
+    </div>
+  </aside>
+
+  <!-- ============ PASSCODE GATE ============ -->
+  <div class="overlay" id="gate" hidden>
+    <form class="gate-card" id="gateForm" role="dialog" aria-modal="true" aria-labelledby="gateTitle">
+      <span class="brand-mark big" aria-hidden="true"><svg viewBox="0 0 24 24" width="26" height="26">
+          <path fill="currentColor" d="M13 2 4 14h6l-1 8 9-12h-6l1-8z" />
+        </svg></span>
+      <h2 id="gateTitle">Enter passcode</h2>
+      <p>This app is running on someone's laptop. Ask them for the passcode (APP_PASSCODE in .env).</p>
+      <input id="gateInput" class="field big" type="password" inputmode="numeric" autocomplete="off"
+        aria-label="Passcode" required>
+      <p class="gate-error" id="gateError" role="alert"></p>
+      <button class="btn-primary" type="submit">Unlock</button>
+    </form>
+  </div>
+
+  <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
+  <audio id="voice" preload="auto" playsinline></audio>
+
+  <script src="static/app.js?v=4" defer></script>
+</body>
+
+</html>

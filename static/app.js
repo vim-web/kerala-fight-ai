@@ -143,7 +143,7 @@ function setExpression(expr) {
   const safeExpr = allowed.includes(expr) ? expr : 'angry';
   const img = $('fighterImg');
   if (img) {
-    img.src = `/static/characters/${currentMode}/${safeExpr}.svg`;
+    img.src = `static/characters/${currentMode}/${safeExpr}.svg`;
     img.alt = `${CHARACTERS[currentMode].title} (${safeExpr})`;
   }
 }
@@ -309,11 +309,13 @@ function enqueueSentenceAudio(sentenceText, seq) {
         method: 'GET',
         headers: authHeaders()
       });
-      if (!res.ok) return null;
+      if (!res.ok) {
+        return window.speechSynthesis ? { browserText: clean, seq } : null;
+      }
       const blob = await res.blob();
       return { url: URL.createObjectURL(blob), seq };
     } catch (_) {
-      return null;
+      return window.speechSynthesis ? { browserText: clean, seq } : null;
     }
   })();
 
@@ -386,6 +388,112 @@ function flushCompleteSentences(text, cursor, seq) {
   return newCursor;
 }
 
+const STATIC_ROASTS = {
+  boss: {
+    win: {
+      ml: 'ജയിച്ചെന്നോ? പോയി തുലയ്, നിന്റെ തർക്കുത്തരം കേട്ട് എന്റെ തല പുകഞ്ഞു!',
+      manglish: 'Jayichenno? Poyi thulay, ninte tharkkutharam kettu ente thala pukanju!',
+      en: 'You won?! Get lost, my head is spinning from your arguments!'
+    },
+    lines: {
+      ml: [
+        'എനിക്ക് ഒഴിവുകഴിവല്ല വേണ്ടത്, ആ ഫയൽ എവിടെയെന്ന് പറ!',
+        'നാക്ക് അടക്കി സംസാരിക്കെടാ! ശമ്പളം വാങ്ങാൻ മാത്രം സമയത്ത് വരും!',
+        'കള്ളം പറയുന്നതിനും ഒരു പരിധിയുണ്ട് ഡാ!',
+        'നിന്റെ ഈ ഡയലോഗ് കേട്ട് മടുത്തു, പണി എടുത്ത് കാണിക്കെടാ!',
+        'അതേടാ, എല്ലാം ട്രാഫിക് ബ്ലോക്കിന്റെ തലയിൽ വെച്ചോ!'
+      ],
+      manglish: [
+        'Enikku excuse venda, aa file evide ennu parayu!',
+        'Naavukondu paniyaan nokkalle, pani eduthu kaanikeda!',
+        'Salary vaangaan maathram krithya samayathu varum alle?',
+        'Ninte ee dialogue kettu maduthu, valla paniyum cheyyeda!',
+        'Ellam road blockinte thalayil vecho, kalla thendi!'
+      ],
+      en: [
+        "I didn't ask for excuses, where is the report?!",
+        'Watch your tone! You only show up on time on payday!',
+        'Save the drama and finish the work you were assigned!',
+        'Every single day a new story from you!',
+        'Stop giving lectures and get back to your desk!'
+      ]
+    }
+  },
+  girlfriend: {
+    win: {
+      ml: 'ഓഹോ, കപ്പടിച്ചല്ലോ! ആ ട്രോഫിയും കെട്ടിപ്പിടിച്ച് കിടന്നുറങ്ങിക്കോ, ഇനി മിണ്ടരുത്!',
+      manglish: 'Oho, cup adichallo! Aa trophyum kettippidichu kidannu urangikko!',
+      en: 'Oh, you won a trophy? Go hug it and sleep, never talk to me again!'
+    },
+    lines: {
+      ml: [
+        'മൂന്ന് ദിവസം ഒരു മെസ്സേജ് അയക്കാൻ സമയം കിട്ടിയില്ലല്ലേ?!',
+        'എപ്പോഴും ഇത് തന്നെ, കഴിഞ്ഞിട്ട് ഒരു സോറി പറഞ്ഞ് കൈ കഴുകും!',
+        'എനിക്ക് ഇപ്പോൾ ദേഷ്യമല്ല, നിന്റെ സ്വഭാവം കണ്ട് മടുത്തു!',
+        'കള്ളം പറയല്ലേ, കൂട്ടുകാരുടെ കൂടെ കറങ്ങാൻ സമയം ഉണ്ടായിരുന്നല്ലോ!',
+        'ആഹാ, ഇപ്പോൾ എല്ലാം എന്റെ കുറ്റമായോ?! കൊള്ളാം!'
+      ],
+      manglish: [
+        'Moonnu divasam oru message polum ayakkan samayam kittiyillalle?!',
+        'Ellam kazhinju oru sorry parayum, athu kondu entha karyam?',
+        'Enikku ippo deshyam alla, ninte swabhavam kandu maduthu!',
+        'Friendsinte koode karangaan ishtam pole samayam undallo!',
+        'Aaha, ippo ellam ente kuttam aayo?! Nalla karyam!'
+      ],
+      en: [
+        'Three days and not even a single text message from you!',
+        'You always do this and think one sorry fixes everything!',
+        'You had plenty of time for your friends though, right?!',
+        'Oh wonderful, now somehow this is all MY fault?!',
+        "I'm not even angry anymore, I'm just tired of your excuses!"
+      ]
+    }
+  }
+};
+let staticRoastIdx = 0;
+
+async function offlineImprovReply(userText, mySeq, typingBubble) {
+  const isWin = /\b(i win|i won|njan jayichu|njan jeyichu)\b/i.test(userText) || userText.includes('ഞാൻ ജയിച്ചു');
+  const pack = STATIC_ROASTS[currentMode] || STATIC_ROASTS.boss;
+  let reply;
+  if (isWin) {
+    reply = pack.win[currentLang] || pack.win.ml;
+  } else {
+    const pool = pack.lines[currentLang] || pack.lines.ml;
+    reply = pool[staticRoastIdx % pool.length];
+    staticRoastIdx++;
+  }
+
+  await new Promise(r => setTimeout(r, 260));
+  if (mySeq !== turnSeq) return;
+
+  typingBubble.remove();
+  isThinking = false;
+  updateRage(Math.min(10, angerLevel + 1), isWin ? 0 : 1);
+
+  const aiBubble = appendBubble('ai', '');
+  setStageState('typing');
+  const words = reply.split(' ');
+  let acc = '';
+  for (const w of words) {
+    if (mySeq !== turnSeq) return;
+    acc += (acc ? ' ' : '') + w;
+    aiBubble.textContent = acc;
+    await new Promise(r => setTimeout(r, 45));
+  }
+  messages.push({ role: 'ai', text: reply });
+  setExpression(isWin ? 'sulking' : 'angry');
+  enqueueSentenceAudio(reply, mySeq);
+
+  if (isWin) {
+    winsCount++;
+    localStorage.setItem('kf_wins', String(winsCount));
+    updateWinsPips();
+    announce('K.O.!', true);
+    setTimeout(() => showRoundOver(reply), 950);
+  }
+}
+
 // ============================================================================
 // STREAMING CHAT FLOW
 // ============================================================================
@@ -437,6 +545,11 @@ async function sendMessage(rawText) {
       isThinking = false;
       setStageState('idle');
       $('gate').hidden = false;
+      return;
+    }
+
+    if (res.status === 404 || res.status === 405) {
+      await offlineImprovReply(text, mySeq, typingBubble);
       return;
     }
 
@@ -586,7 +699,7 @@ function resetRound(isFirst = false) {
 function showRoundOver(partingLine) {
   $('koTitle').textContent = 'YOU WIN!';
   $('koSub').textContent = `Round ${roundNumber} goes to you`;
-  $('koImg').src = `/static/characters/${currentMode}/sulking.svg`;
+  $('koImg').src = `static/characters/${currentMode}/sulking.svg`;
   $('koLine').textContent = `"${partingLine}"`;
   $('roundOver').hidden = false;
   setExpression('sulking');
