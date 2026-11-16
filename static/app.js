@@ -1,4 +1,4 @@
-// Kerala Fight AI — Arcade HUD + Low-Latency Streaming & Pipelined Voice Engine
+// Kerala Fight AI — Arcade HUD + Low-Latency Streaming, Distinct Male/Female Voices & Live Improv Engine
 
 const $ = id => document.getElementById(id);
 
@@ -8,26 +8,26 @@ const CHARACTERS = {
     title: 'Angry Boss',
     startAnger: 9,
     openers: {
-      ml: 'ഹായ് ഡാ, എന്താടാ കാര്യം? പറ.',
-      manglish: 'Hi da, enthaada karyam? Parayu.',
-      en: "Hi da, what's up? Tell me."
+      ml: 'ഹായ് ഡാ, എന്താടാ കാര്യം? ഫയൽ എവിടെ മൈരേ?! പറ!',
+      manglish: 'Hi da, enthaada karyam? Aa file evide da myre?! Parayu!',
+      en: "What's up? Where the hell is that file?! Speak up!"
     },
     chips: {
       ml: [
         { label: '🏆 ഞാൻ ജയിച്ചു', text: 'ഞാൻ ജയിച്ചു', win: true },
-        { label: 'പോടാ മൈരേ', text: 'പോടാ മൈരേ' },
+        { label: 'പോടാ മൈരേ', text: 'പോടാ മൈരേ, നിന്റെ ഒച്ചപ്പാട് എന്റെ അടുത്ത് വേണ്ട!' },
         { label: 'ട്രാഫിക് ആയിരുന്നു സാറേ', text: 'റോഡിൽ ഭയങ്കര ബ്ലോക്ക് ആയിരുന്നു സാറേ' },
         { label: 'സോറി സാറേ', text: 'സോറി സാറേ, ഇനി ആവർത്തിക്കില്ല' }
       ],
       manglish: [
         { label: '🏆 I win', text: 'njan jayichu', win: true },
-        { label: 'Poda myre', text: 'Poda myre' },
+        { label: 'Poda myre', text: 'Poda myre, ninte aattam ente aduthu venda!' },
         { label: 'Traffic block aayirunnu', text: 'Roadil full traffic block aayirunnu sir' },
         { label: 'Sorry sir', text: 'Sorry sir, ini pattillaa' }
       ],
       en: [
         { label: '🏆 I win', text: 'i win', win: true },
-        { label: 'Shut up man', text: 'Shut up, stop shouting at me' },
+        { label: 'Shut up man', text: 'Shut the hell up, stop shouting at me!' },
         { label: 'Stuck in traffic', text: 'I was stuck in terrible traffic' },
         { label: 'Sorry boss', text: 'Sorry boss, I will fix it right now' }
       ]
@@ -36,11 +36,11 @@ const CHARACTERS = {
   girlfriend: {
     name: 'ANGRY GIRLFRIEND',
     title: 'Angry Girlfriend',
-    startAnger: 8,
+    startAnger: 9,
     openers: {
-      ml: 'ഹായ് ഡാ, എന്താടാ വിളിച്ചത്? പറ.',
-      manglish: 'Hi da, enthaada vilichath? Parayu.',
-      en: 'Hi da, what is it? Speak.'
+      ml: 'ഹായ് ഡാ തെണ്ടി, ഇപ്പോഴാണോടാ മൈരേ നിനക്ക് എന്നെ വിളിക്കാൻ സമയം കിട്ടിയത്?! പറ!',
+      manglish: 'Hi da thendi, ippozhaanoda myre ninakku enne vilikkaan samayam kittiyathu?! Parayu!',
+      en: 'Oh look who finally remembered I exist! What the hell do you want now?!'
     },
     chips: {
       ml: [
@@ -65,9 +65,9 @@ const CHARACTERS = {
   }
 };
 
-// State
+// State (Default intensity = 3 Full Roast "da myre" level)
 let currentMode = 'boss';
-let currentIntensity = 2;
+let currentIntensity = 3;
 let currentLang = 'ml';
 let currentModelProvider = 'gemini';
 let currentTtsProvider = 'edge';
@@ -77,18 +77,29 @@ let roundNumber = 1;
 let winsCount = parseInt(localStorage.getItem('kf_wins') || '0', 10) || 0;
 let session = '';
 let messages = [];
+let usedOfflineReplies = [];
 
 let isListening = false;
 let isThinking = false;
 let isSpeaking = false;
 
-let turnSeq = 0; // Guards against stale chunks/audio from aborted requests
+let turnSeq = 0;
 let currentAbortController = null;
 let speechRecognizer = null;
-let audioPipeline = []; // Array of Promises resolving to audio URLs or { browserText }
+let audioPipeline = [];
 let isDrainingAudio = false;
+let availableBrowserVoices = [];
 
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+// Preload browser voices for male/female differentiation
+if (window.speechSynthesis) {
+  const loadVoices = () => {
+    availableBrowserVoices = window.speechSynthesis.getVoices() || [];
+  };
+  loadVoices();
+  window.speechSynthesis.onvoiceschanged = loadVoices;
+}
 
 const newSession = () =>
   window.crypto && crypto.randomUUID
@@ -104,11 +115,32 @@ function setPasscode(val) {
   else localStorage.removeItem('leo_passcode');
 }
 
+function getGeminiKey() {
+  return (localStorage.getItem('leo_gemini_key') || '').trim();
+}
+
+function setGeminiKey(val) {
+  if (val && val.trim()) localStorage.setItem('leo_gemini_key', val.trim());
+  else localStorage.removeItem('leo_gemini_key');
+}
+
 function authHeaders(extra = {}) {
   const h = { ...extra };
   const code = getPasscode();
   if (code) h['X-Passcode'] = code;
   return h;
+}
+
+// Detect whether user message is Malayalam script, Manglish, or English
+function detectMessageLang(text, fallbackLang = 'ml') {
+  if (/[\u0d00-\u0d7f]/.test(text)) return 'ml';
+  const manglishMarkers = /\b(njan|nee|entha|enthada|enthaada|epo|ippo|ipo|cheyy|paranj|kuttam|allaa|alle|kurch|aaynru|aayirunnu|poda|podi|myre|thendi|patti|mole|saare|shoo|chumma|scene|evide|innale|naale|kollam|sheri|pinne|veruthe|kalla|panikku|varum|poyi)\b/i;
+  if (manglishMarkers.test(text)) return 'manglish';
+  if (fallbackLang === 'manglish') return 'manglish';
+  if (/^[a-zA-Z0-9\s.,?!'"-]+$/.test(text)) {
+    return fallbackLang === 'ml' ? 'manglish' : 'en';
+  }
+  return fallbackLang;
 }
 
 // Toast notifications
@@ -163,7 +195,7 @@ function setStageState(state) {
     idle: 'Ready',
     listening: 'Listening…',
     thinking: 'Thinking…',
-    typing: 'Replying…',
+    typing: 'Roasting…',
     speaking: 'Speaking…'
   };
   if (stateText) stateText.textContent = labels[state] || 'Ready';
@@ -227,14 +259,14 @@ function renderChips() {
 }
 
 // Model badge sync
-function syncModelChips() {
+function syncModelChips(customLabel = '') {
   const isCloud = currentModelProvider === 'gemini';
   for (const id of ['modelChipSelect', 'modelChipFight']) {
     const el = $(id);
     if (!el) continue;
     el.className = `model-chip ${isCloud ? 'is-cloud' : 'is-local'}`;
     const lbl = el.querySelector('.model-label');
-    if (lbl) lbl.textContent = isCloud ? 'Cloud' : 'Local';
+    if (lbl) lbl.textContent = customLabel || (isCloud ? 'Cloud AI' : 'Local AI');
   }
   document.querySelectorAll('[data-group="model"] button').forEach(btn => {
     const on = btn.dataset.value === currentModelProvider;
@@ -247,7 +279,7 @@ function syncModelChips() {
 function interrupt() {
   turnSeq++;
   if (currentAbortController) {
-    try { currentAbortController.abort(); } catch (_) { }
+    try { currentAbortController.abort(); } catch (_) {}
     currentAbortController = null;
   }
   const voiceEl = $('voice');
@@ -259,7 +291,7 @@ function interrupt() {
     window.speechSynthesis.cancel();
   }
   if (speechRecognizer && isListening) {
-    try { speechRecognizer.stop(); } catch (_) { }
+    try { speechRecognizer.stop(); } catch (_) {}
   }
   audioPipeline = [];
   isDrainingAudio = false;
@@ -282,8 +314,49 @@ function appendBubble(role, text, extraClass = '') {
 }
 
 // ============================================================================
-// PIPELINED VOICE ENGINE (Prefetches Sentence Audio in Parallel with Streaming)
+// DISTINCT MALE vs FEMALE VOICE ENGINE (Server Neural TTS + Device Pitch/Gender)
 // ============================================================================
+
+function configureBrowserUtterance(text) {
+  const utter = new SpeechSynthesisUtterance(text);
+  const hasMalayalamScript = /[\u0d00-\u0d7f]/.test(text);
+  utter.lang = hasMalayalamScript ? 'ml-IN' : 'en-IN';
+
+  const voices = availableBrowserVoices.length
+    ? availableBrowserVoices
+    : (window.speechSynthesis ? window.speechSynthesis.getVoices() : []);
+
+  const isFemaleChar = currentMode === 'girlfriend';
+  const femalePattern = /sobhana|neerja|heera|veena|swara|priya|lekha|female|woman|girl|zira|samantha|victoria|karen|moira|#female/i;
+  const malePattern = /midhun|prabhat|ravi|madhur|arun|kumar|male|man|david|daniel|alex|james|richard|#male/i;
+
+  const langPrefix = hasMalayalamScript ? 'ml' : 'en';
+  const matchingLangVoices = voices.filter(v => (v.lang || '').toLowerCase().startsWith(langPrefix));
+  const indianVoices = voices.filter(v => /-(in|gb)/i.test(v.lang || ''));
+  const pool = matchingLangVoices.length ? matchingLangVoices : (indianVoices.length ? indianVoices : voices);
+
+  let chosen = null;
+  if (isFemaleChar) {
+    chosen = pool.find(v => femalePattern.test(v.name + ' ' + v.voiceURI)) ||
+             voices.find(v => (v.lang || '').toLowerCase().startsWith(langPrefix) && !malePattern.test(v.name + ' ' + v.voiceURI));
+  } else {
+    chosen = pool.find(v => malePattern.test(v.name + ' ' + v.voiceURI)) ||
+             voices.find(v => (v.lang || '').toLowerCase().startsWith(langPrefix) && !femalePattern.test(v.name + ' ' + v.voiceURI));
+  }
+  if (chosen) utter.voice = chosen;
+
+  // Crucial acoustic separation so Boss (deep gruff male) and Girlfriend (sharp high female)
+  // NEVER sound the same, even on Android phones with a single Malayalam TTS voice!
+  if (isFemaleChar) {
+    utter.pitch = 1.48; // High, dramatic, sharp female pitch
+    utter.rate = 1.15;  // Fast, fiery delivery
+  } else {
+    utter.pitch = 0.54; // Deep, booming, angry boss pitch
+    utter.rate = 1.05;
+  }
+  utter.volume = 1.0;
+  return utter;
+}
 
 function enqueueSentenceAudio(sentenceText, seq) {
   if (!voiceOutEnabled || !sentenceText || !sentenceText.trim()) return;
@@ -296,7 +369,7 @@ function enqueueSentenceAudio(sentenceText, seq) {
     return;
   }
 
-  // Start fetching MP3 immediately in the background while text continues streaming!
+  // Try FastAPI /api/tts (Edge-TTS MidhunNeural Male / SobhanaNeural Female), fallback to gender-shaped browser voice
   const fetchPromise = (async () => {
     try {
       const params = new URLSearchParams({
@@ -336,10 +409,10 @@ async function drainAudioPipeline(seq) {
       isSpeaking = true;
       setStageState('speaking');
 
-      if (item.browserText) {
+      if (item.browserText && window.speechSynthesis) {
         await new Promise(resolve => {
-          const utter = new SpeechSynthesisUtterance(item.browserText);
-          utter.lang = currentLang === 'ml' ? 'ml-IN' : (currentLang === 'manglish' ? 'en-IN' : 'en-US');
+          window.speechSynthesis.cancel();
+          const utter = configureBrowserUtterance(item.browserText);
           utter.onend = resolve;
           utter.onerror = resolve;
           window.speechSynthesis.speak(utter);
@@ -370,7 +443,6 @@ async function drainAudioPipeline(seq) {
   }
 }
 
-// Extract complete sentences from streaming buffer so TTS starts immediately
 function flushCompleteSentences(text, cursor, seq) {
   const slice = text.slice(cursor);
   const re = /[.!?।\n]+(\s|$)/g;
@@ -388,83 +460,375 @@ function flushCompleteSentences(text, cursor, seq) {
   return newCursor;
 }
 
-const STATIC_ROASTS = {
-  boss: {
-    win: {
-      ml: 'ജയിച്ചെന്നോ? പോയി തുലയ്, നിന്റെ തർക്കുത്തരം കേട്ട് എന്റെ തല പുകഞ്ഞു!',
-      manglish: 'Jayichenno? Poyi thulay, ninte tharkkutharam kettu ente thala pukanju!',
-      en: 'You won?! Get lost, my head is spinning from your arguments!'
-    },
-    lines: {
-      ml: [
-        'എനിക്ക് ഒഴിവുകഴിവല്ല വേണ്ടത്, ആ ഫയൽ എവിടെയെന്ന് പറ!',
-        'നാക്ക് അടക്കി സംസാരിക്കെടാ! ശമ്പളം വാങ്ങാൻ മാത്രം സമയത്ത് വരും!',
-        'കള്ളം പറയുന്നതിനും ഒരു പരിധിയുണ്ട് ഡാ!',
-        'നിന്റെ ഈ ഡയലോഗ് കേട്ട് മടുത്തു, പണി എടുത്ത് കാണിക്കെടാ!',
-        'അതേടാ, എല്ലാം ട്രാഫിക് ബ്ലോക്കിന്റെ തലയിൽ വെച്ചോ!'
-      ],
-      manglish: [
-        'Enikku excuse venda, aa file evide ennu parayu!',
-        'Naavukondu paniyaan nokkalle, pani eduthu kaanikeda!',
-        'Salary vaangaan maathram krithya samayathu varum alle?',
-        'Ninte ee dialogue kettu maduthu, valla paniyum cheyyeda!',
-        'Ellam road blockinte thalayil vecho, kalla thendi!'
-      ],
-      en: [
-        "I didn't ask for excuses, where is the report?!",
-        'Watch your tone! You only show up on time on payday!',
-        'Save the drama and finish the work you were assigned!',
-        'Every single day a new story from you!',
-        'Stop giving lectures and get back to your desk!'
-      ]
-    }
-  },
-  girlfriend: {
-    win: {
-      ml: 'ഓഹോ, കപ്പടിച്ചല്ലോ! ആ ട്രോഫിയും കെട്ടിപ്പിടിച്ച് കിടന്നുറങ്ങിക്കോ, ഇനി മിണ്ടരുത്!',
-      manglish: 'Oho, cup adichallo! Aa trophyum kettippidichu kidannu urangikko!',
-      en: 'Oh, you won a trophy? Go hug it and sleep, never talk to me again!'
-    },
-    lines: {
-      ml: [
-        'മൂന്ന് ദിവസം ഒരു മെസ്സേജ് അയക്കാൻ സമയം കിട്ടിയില്ലല്ലേ?!',
-        'എപ്പോഴും ഇത് തന്നെ, കഴിഞ്ഞിട്ട് ഒരു സോറി പറഞ്ഞ് കൈ കഴുകും!',
-        'എനിക്ക് ഇപ്പോൾ ദേഷ്യമല്ല, നിന്റെ സ്വഭാവം കണ്ട് മടുത്തു!',
-        'കള്ളം പറയല്ലേ, കൂട്ടുകാരുടെ കൂടെ കറങ്ങാൻ സമയം ഉണ്ടായിരുന്നല്ലോ!',
-        'ആഹാ, ഇപ്പോൾ എല്ലാം എന്റെ കുറ്റമായോ?! കൊള്ളാം!'
-      ],
-      manglish: [
-        'Moonnu divasam oru message polum ayakkan samayam kittiyillalle?!',
-        'Ellam kazhinju oru sorry parayum, athu kondu entha karyam?',
-        'Enikku ippo deshyam alla, ninte swabhavam kandu maduthu!',
-        'Friendsinte koode karangaan ishtam pole samayam undallo!',
-        'Aaha, ippo ellam ente kuttam aayo?! Nalla karyam!'
-      ],
-      en: [
-        'Three days and not even a single text message from you!',
-        'You always do this and think one sorry fixes everything!',
-        'You had plenty of time for your friends though, right?!',
-        'Oh wonderful, now somehow this is all MY fault?!',
-        "I'm not even angry anymore, I'm just tired of your excuses!"
-      ]
-    }
+// ============================================================================
+// GITHUB PAGES LIVE AI + CONTEXTUAL MIRROR & ONE-UP KERALA SWEARING ENGINE
+// ============================================================================
+
+function buildBrowserSystemPrompt(userText, msgLang, isWin) {
+  const isBoss = currentMode === 'boss';
+  const charDesc = isBoss
+    ? 'You are ANGRY BOSS from Kerala on a heated phone call with your lazy subordinate. You explode over excuses, missed deadlines, reports, and attitude.'
+    : 'You are ANGRY GIRLFRIEND from Kerala in a fiery relationship fight. You explode over late replies, fake excuses, "tension" stories, and being ignored.';
+
+  const swearGuide = currentIntensity === 1
+    ? 'Use sharp, biting Kerala sarcasm ("മടിയൻ", "കള്ളൻ", "ഉഴപ്പൻ" / "madiyan", "kallan").'
+    : 'MUST use authentic, unfiltered comic Kerala street swearing in EVERY reply ("മൈരേ", "പോടാ തെണ്ടി", "പന്ന പട്ടി", "കോപ്പേ", "ചെറ്റ", "കഴുതേ", "പോയി തുലയെടാ" / "da myre", "poda thendi", "panna patti", "koppe", "chetta", "kazhuthe"). Do NOT hold back or be polite!';
+
+  const langRule = msgLang === 'ml'
+    ? 'Reply ONLY in spoken Kerala Malayalam script (മലയാളം). Never use formal bookish Malayalam.'
+    : msgLang === 'manglish'
+    ? 'Reply ONLY in natural Kerala Manglish (Malayalam written in English alphabet like "Enthaada myre nee paranjathu?! Poda thendi!").'
+    : 'Reply in fiery Indian English mixed with Kerala swear words ("da myre", "poda thendi").';
+
+  const winRule = isWin
+    ? 'The user declared "I win"! Give one final furious, sulking parting insult under 15 words admitting you are done arguing with this idiot.'
+    : `React DIRECTLY to the user's exact words ("${userText}"). Mockingly quote or twist their words against them! Keep it to 1 or 2 short, explosive lines (under 22 words). No emojis, no stage directions, never act like an assistant.`;
+
+  const avoid = usedOfflineReplies.length
+    ? `\nNever repeat any of these: ${usedOfflineReplies.slice(-8).join(' | ')}`
+    : '';
+
+  return `${charDesc}\n${swearGuide}\n${langRule}\n${winRule}${avoid}`;
+}
+
+async function fetchBrowserLiveAI(userText, msgLang, isWin, signal) {
+  const sysPrompt = buildBrowserSystemPrompt(userText, msgLang, isWin);
+  const gemKey = getGeminiKey();
+
+  // 1. Direct Gemini API if user provided key in Settings
+  if (gemKey.length > 20) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(gemKey)}`;
+      const contents = messages.slice(-10).map(m => ({
+        role: m.role === 'user' ? 'user' : 'model',
+        parts: [{ text: m.text }]
+      }));
+      while (contents.length && contents[0].role === 'model') contents.shift();
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        signal,
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: sysPrompt }] },
+          contents,
+          generationConfig: { temperature: 1.05, maxOutputTokens: 110, thinkingConfig: { thinkingBudget: 0 } }
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const text = (data.candidates?.[0]?.content?.parts || [])
+          .filter(p => !p.thought && p.text)
+          .map(p => p.text)
+          .join('')
+          .trim();
+        if (text) return text;
+      }
+    } catch (_) {}
   }
-};
-let staticRoastIdx = 0;
+
+  // 2. Keyless Free Cloud AI (Pollinations OpenAI endpoint) so GitHub Pages is truly live
+  try {
+    const chatMsgs = [
+      { role: 'system', content: sysPrompt },
+      ...messages.slice(-8).map(m => ({
+        role: m.role === 'user' ? 'user' : 'assistant',
+        content: m.text
+      }))
+    ];
+    const res = await fetch('https://text.pollinations.ai/openai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      signal,
+      body: JSON.stringify({
+        model: 'openai',
+        messages: chatMsgs,
+        temperature: 1.05,
+        max_tokens: 90
+      })
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const reply = data?.choices?.[0]?.message?.content?.trim();
+      if (reply && reply.length > 2 && !/how can i help/i.test(reply)) {
+        return reply.replace(/^["']|["']$/g, '').trim();
+      }
+    }
+  } catch (_) {}
+
+  return null;
+}
+
+// Instant Context-Aware Mirror & One-Up Kerala Swearing Generator (reacts to exact user words!)
+function generateContextualKeralaRoast(userText, msgLang, isWin) {
+  const low = userText.toLowerCase();
+  const isBoss = currentMode === 'boss';
+
+  // Pick a key phrase from user's message to mockingly throw back at them
+  const words = userText.replace(/[?!.,]/g, '').trim().split(/\s+/).filter(w => w.length > 2);
+  const quoted = words.slice(0, 3).join(' ') || userText.slice(0, 20);
+
+  if (isWin) {
+    const winMap = {
+      boss: {
+        ml: 'ജയിച്ചെന്നോ മൈരേ?! പോയി തുലയെടാ തെണ്ടി, നിന്റെ തർക്കുത്തരം കേട്ട് എന്റെ തല പുകഞ്ഞു!',
+        manglish: 'Jayichenno da myre?! Poyi thulayeda thendi, ninte tharkkutharam kettu ente thala pukanju!',
+        en: 'You won?! Get lost you bloody idiot, my head is exploding from your nonsense!'
+      },
+      girlfriend: {
+        ml: 'ഓഹോ, നീ ജയിച്ചല്ലോ മൈരേ! ആ ട്രോഫിയും കെട്ടിപ്പിടിച്ച് കിടന്നുറങ്ങിക്കോ തെണ്ടി, ഇനി എന്റെ മുമ്പിൽ വരരുത്!',
+        manglish: 'Oho, nee jayichallo da myre! Aa trophyum kettippidichu kidannu urangikko thendi, ini മിണ്ടരുത്!',
+        en: 'Oh, you won a trophy?! Go hug it and sleep you jerk, never talk to me again!'
+      }
+    };
+    return winMap[currentMode][msgLang] || winMap[currentMode].ml;
+  }
+
+  const pickUnique = list => {
+    const fresh = list.filter(item => !usedOfflineReplies.includes(item));
+    const pool = fresh.length ? fresh : list;
+    const chosen = pool[Math.floor(Math.random() * pool.length)];
+    usedOfflineReplies.push(chosen);
+    if (usedOfflineReplies.length > 15) usedOfflineReplies.shift();
+    return chosen;
+  };
+
+  // 1. User swore or used an animal/insult -> One-up them savagely!
+  if (/myr|മൈര|thendi|തെണ്ടി|patti|പട്ടി|panni|പന്നി|kazhutha|കഴുത|poda|പോടാ|podi|പോടി|chetta|ചെറ്റ|koppe|കോപ്പ|fuck|shit|bitch|idiot|stupid/.test(low)) {
+    const bank = isBoss ? {
+      ml: [
+        `"${quoted}" എന്നോ?! നിന്റെ തന്തയോട് പോയി പറയടാ മൈരേ! ബോസിനോടാണോടാ പന്ന പട്ടി നിന്റെ അഭ്യാസം?!`,
+        `എന്താടാ മൈരേ നീ കുരയ്ക്കുന്നത്?! ശമ്പളം തരുന്ന എന്നോട് തെറി പറയുന്നോടാ തെണ്ടി, കാട്ടുപോത്തേ!`,
+        `നീ ആരെയാടാ കോപ്പേ വിളിച്ചത്?! നാക്ക് പിഴുതെടുക്കും ഞാൻ, പന്ന കഴുതേ! പണി എടുത്ത് വെക്കടാ മൈരേ!`
+      ],
+      manglish: [
+        `"${quoted}" enno?! Ninte thanthayodu poyi parayeda myre! Bossinodaanoda panna patti ninte dialogue?!`,
+        `Enthaada myre nee kurakkunnathu?! Ninakku salary tharunna ennodu theri parayunnoda kalla thendi?!`,
+        `Nee aareyaada koppe vilichathu?! Naakku pizhuthu edukkum njan, panna kazhuthe! Poda myre!`
+      ],
+      en: [
+        `"${quoted}"?! Who the hell do you think you're barking at, da myre?! Shut your mouth and do your job, you bloody donkey!`,
+        `Watch your filthy mouth da thendi! One more word and I'll kick your lazy ass out of this office!`
+      ]
+    } : {
+      ml: [
+        `"${quoted}" എന്നോ?! നിന്റെ മറ്റവളോട് പോയി പറയടാ മൈരേ! എന്നോട് തെറി പറഞ്ഞാൽ നിന്റെ മോന്ത ഞാൻ അടിച്ചു പൊളിക്കും തെണ്ടി!`,
+        `എന്താടാ പന്ന പട്ടി നീ കുരച്ചത്?! തെറ്റ് മുഴുവൻ നീ ചെയ്തിട്ട് എന്നെ തെറി വിളിക്കുന്നോടാ ചെറ്റ മൈരേ?!`,
+        `പോടാ കാട്ടുപോത്തേ! നിന്റെ ആ "${quoted}" നിന്റെ കയ്യിൽ തന്നെ വെച്ചോ, നാണമില്ലാത്ത തെണ്ടി!`
+      ],
+      manglish: [
+        `"${quoted}" enno?! Ninte mattavalodu poyi parayeda myre! Ennodu theri paranjaal ninte montha njan adichu polikkum thendi!`,
+        `Enthaada panna patti nee kurachathu?! Thettu muzhuvan nee cheythittu enne theri vilikkunnoda chetta myre?!`,
+        `Poda kaattupothe! Ninte aa "${quoted}" ninte kayyil thanne vecho, naanamillatha thendi!`
+      ],
+      en: [
+        `"${quoted}"?! Go talk like that to your trashy friends, da myre! Don't you dare bark at me you shameless thendi!`,
+        `Excuse me?! You mess everything up and now you swear at me, da patti?! Get lost!`
+      ]
+    };
+    return pickUnique(bank[msgLang] || bank.ml);
+  }
+
+  // 2. User talks about "kuttam" (blame) / "njan epo" (when did I) / "scene"
+  if (/kuttam|കുറ്റം|epo|എപ്പോ|scene|സീൻ|drama|blame/.test(low)) {
+    const bank = isBoss ? {
+      ml: [
+        `"${quoted}" എന്നോ?! പിന്നെ ആരാടാ മൈരേ ഫയൽ വൈകിച്ചത്, എന്റെ മുത്തച്ഛനോ?! ഉരുളാതെ പണി തീർക്കടാ തെണ്ടി!`,
+        `നീ കുറ്റം ചെയ്തില്ലേ മൈരേ?! കള്ളത്തരം കൈയോടെ പിടിച്ചപ്പോൾ സീൻ ആണെന്നോ, പന്ന പട്ടി?!`
+      ],
+      manglish: [
+        `"${quoted}" enno?! Pinne aaraada myre work mudakkiyathu?! Urulaathe pani theerkkada panna thendi!`,
+        `Oho, nee onnum cheythittilla alle da myre?! Pinne njan ivide vattaayittu alarukayaanoda patti?!`
+      ],
+      en: [
+        `"${quoted}"?! Then who the hell botched the deadline, da myre?! Stop playing innocent, you lazy thendi!`
+      ]
+    } : {
+      ml: [
+        `"${quoted}" എന്നോ?! ഓഹോ, അപ്പൊ ഞാൻ വെറുതെ സീൻ ഉണ്ടാക്കുകയാണല്ലേടാ മൈരേ?! നിന്റെ കള്ള അഭിനയം നിർത്തടാ തെണ്ടി!`,
+        `നീ എപ്പോഴാ കുറ്റം പറഞ്ഞതെന്നോ പന്ന പട്ടി?! നീ വായ തുറന്നാൽ കള്ളവും ഒഴിവുകഴിവും മാത്രമല്ലേയുള്ളൂ മൈരേ!`
+      ],
+      manglish: [
+        `Oho, "${quoted}" alle da myre?! Appo njan vattaayittu scene undakkukayaanoda panna thendi?! Ninte kalla abhinayam ente aduthu venda!`,
+        `Nee eppozha kuttam paranjathu enno da patti?! Nee vaaya thurannaal kallavum excuse-um maathram alle ullu myre!`
+      ],
+      en: [
+        `Oh, "${quoted}"?! So now I'm the crazy one making a scene, da myre?! Stop gaslighting me you shameless thendi!`
+      ]
+    };
+    return pickUnique(bank[msgLang] || bank.ml);
+  }
+
+  // 3. User talks about "tension" / "busy" / "work" / "headache" / "stress"
+  if (/tension|ടെൻഷൻ|busy|ബിസി|stress|pani|പണി|tired|ക്ഷീണം/.test(low)) {
+    const bank = isBoss ? {
+      ml: [
+        `നിന്റെ കോപ്പിലെ "${quoted}"! ഇവിടെ കമ്പനി പൂട്ടാൻ പോകുമ്പോഴാണോടാ മൈരേ നിന്റെ ടെൻഷൻ?! പോടാ തെണ്ടി!`,
+        `നിനക്ക് മാത്രമേയുള്ളോടാ പന്ന പട്ടി ടെൻഷൻ?! ശമ്പളം എണ്ണി വാങ്ങുമ്പോൾ ഈ ടെൻഷൻ ഒന്നും കണ്ടില്ലല്ലോ മൈരേ!`
+      ],
+      manglish: [
+        `Ninte koppile "${quoted}"! Ivide company poottaan pokumbozhaanoda myre ninte tension?! Poda thendi!`,
+        `Ninakku maathrame ulloda panna patti tension?! Salary vaangumbol ee tension onnum kandillallo da myre!`
+      ],
+      en: [
+        `To hell with your "${quoted}" da myre! You never have any tension on payday, do you, you useless thendi?!`
+      ]
+    } : {
+      ml: [
+        `നിന്റെ കോപ്പിലെ ഒരു ടെൻഷൻ! കൂട്ടുകാരുടെ കൂടെ തെണ്ടിത്തിരിയാൻ ഒരു ടെൻഷനും ഇല്ലല്ലോടാ മൈരേ! എന്നോട് സംസാരിക്കാൻ മാത്രം ടെൻഷൻ, ചെറ്റ!`,
+        `"${quoted}" പോലും! മൂന്ന് ദിവസം ഒരു മെസ്സേജ് അയക്കാൻ നിനക്ക് കൈ പൊള്ളിപ്പോയോടാ പന്ന തെണ്ടി?!`
+      ],
+      manglish: [
+        `Ninte koppile oru tension! Friendsinte koode karangaan oru tension-um illalloda myre! Ennodu mindaan maathram tension, kalla thendi!`,
+        `"${quoted}" polum! Oru message ayakkaan ninakku kai pollippoyoda panna patti?! Poda myre!`
+      ],
+      en: [
+        `Oh, "${quoted}"?! You had zero tension while hanging out with your friends, da myre! Save your fake stories, thendi!`
+      ]
+    };
+    return pickUnique(bank[msgLang] || bank.ml);
+  }
+
+  // 4. User asks "what should I do now" ("entha cheyyndee" / "ipo entha" / "shoo")
+  if (/cheyy|ചെയ്യ|shoo|ശോ|what now|entha ipo|ipo entha/.test(low)) {
+    const bank = isBoss ? {
+      ml: [
+        `"${quoted}" എന്നോ?! പോയി ഫയൽ തീർത്തു വെക്കടാ മൈരേ! അല്ലെങ്കിൽ നിന്റെ സീറ്റ് തെറിക്കും തെണ്ടി!`,
+        `ഇനി എന്ത് ചെയ്യണമെന്നോ പന്ന കഴുതേ?! വായടച്ച് ഇരുന്ന് പണി എടുക്കടാ മൈരേ!`
+      ],
+      manglish: [
+        `"${quoted}" enno?! Poyi pani theerthu vekkada myre! Ninnekkondu njan thottallo da panna thendi!`,
+        `Ini enthu cheyyanam enno kazhuthe?! Vaayadachu irunnu pani edukkedaa myre, ninte oru "shoo"!`
+      ],
+      en: [
+        `"${quoted}"?! Shut your mouth and finish the damn work right now, da myre, before I fire you!`
+      ]
+    } : {
+      ml: [
+        `"${quoted}" എന്നോ?! പോയി കിണറ്റിൽ ചാടടാ മൈരേ! നിന്റെ ഒരു "ശോ"! മോന്ത കാണിക്കരുത് എന്റെ മുമ്പിൽ, തെണ്ടി!`,
+        `ഇനി എന്ത് ചെയ്യണമെന്ന് നിനക്ക് അറിയില്ലേടാ പന്ന പട്ടി?! പോയി തുലയെടാ മൈരേ, എനിക്ക് നിന്റെ ശബ്ദം കേൾക്കണ്ട!`
+      ],
+      manglish: [
+        `"${quoted}" enno?! Poyi thulayeda myre! Ninte oru "shoo"! Montha kaanikkaruthu ente mumbil, panna thendi!`,
+        `Ini enthu cheyyanam ennu ninakku ariyilleda patti?! Ellam kulam aakki vechittu chodikkunnu, chetta myre!`
+      ],
+      en: [
+        `"${quoted}"?! Go jump in a well, da myre! After ruining everything you ask me what to do, you shameless thendi!`
+      ]
+    };
+    return pickUnique(bank[msgLang] || bank.ml);
+  }
+
+  // 5. User talks about phone / charge / battery / traffic / block
+  if (/phone|ഫോൺ|charge|ചാർജ്|battery|traffic|ട്രാഫിക്|block|ബ്ലോക്ക്/.test(low)) {
+    const bank = isBoss ? {
+      ml: [
+        `നിന്റെ കോപ്പിലെ "${quoted}"! എന്നും റോഡ് ബ്ലോക്കും ഫോൺ ചാർജും തന്നെയാണോടാ മൈരേ നിന്റെ തരികിട?! പോടാ തെണ്ടി!`,
+        `കള്ളം പറയല്ലേടാ പന്ന പട്ടി! നിന്റെ "${quoted}" കഥ കേട്ട് എന്റെ ചെവി പുളിച്ചു മൈരേ!`
+      ],
+      manglish: [
+        `Ninte koppile "${quoted}"! Ennum ithu thanneyaanoda myre ninte kalla excuse?! Poda thendi!`,
+        `Kallam parayalleda panna patti! Ninte "${quoted}" katha kettu ente chevi pulichu myre!`
+      ],
+      en: [
+        `Your bloody "${quoted}" excuse every single day, da myre! Do I look like a fool to you, thendi?!`
+      ]
+    } : {
+      ml: [
+        `നിന്റെ ഫോൺ ചാർജ് മാത്രമേ തീർന്നുള്ളോ അതോ നിന്റെ തലച്ചോറും തീർന്നോടാ മൈരേ?! ചാർജർ കുത്താൻ അറിയാത്ത പൊട്ടനാണോ നീ തെണ്ടി?!`,
+        `കള്ള പന്നി! എന്നെ വിളിക്കുമ്പോൾ മാത്രം നിന്റെ ഫോൺ ചാർജ് തീരും അല്ലേടാ ചെറ്റ മൈരേ?!`
+      ],
+      manglish: [
+        `Ninte phone charge maathrame theernnullo atho ninte thalachorum theernnoda myre?! Charger kuthaan ariyaatha pottanaanoda nee thendi?!`,
+        `Kalla panni! Enne vilikkumbol maathram ninte "${quoted}" varum alleda chetta myre?!`
+      ],
+      en: [
+        `Oh, your phone died?! Did your brain die too, da myre?! Don't give me that pathetic excuse, thendi!`
+      ]
+    };
+    return pickUnique(bank[msgLang] || bank.ml);
+  }
+
+  // 6. User apologizes ("sorry" / "സോറി" / "kshamikku") -> Never soften!
+  if (/sorry|സോറി|kshami|ക്ഷമി|pizha|thettu/.test(low)) {
+    const bank = isBoss ? {
+      ml: [
+        `നിന്റെ കോപ്പിലെ സോറി എടുത്ത് അച്ചാറിടടാ മൈരേ! എനിക്ക് സോറിയല്ല, പണിയാണ് വേണ്ടത് പന്ന തെണ്ടി!`,
+        `എല്ലാം കുളമാക്കി വെച്ചിട്ട് ഒരു സോറി! പോടാ പട്ടി, നിന്റെ സോറി കൊണ്ട് കമ്പനി ഓടുമോ മൈരേ?!`
+      ],
+      manglish: [
+        `Ninte koppile sorry eduthu achaaridada myre! Enikku sorry alla, paniyaanu vendathu panna thendi!`,
+        `Ellam kulamaakki vechittu oru sorry! Poda patti, ninte sorry kondu vayar നിറയുമോ myre?!`
+      ],
+      en: [
+        `Shove your "${quoted}" da myre! Your sorry doesn't finish the report, you useless thendi!`
+      ]
+    } : {
+      ml: [
+        `നിന്റെ ആ ഉണക്ക സോറി നിന്റെ കയ്യിൽ തന്നെ വെച്ചോ മൈരേ! തെണ്ടിത്തരം മുഴുവൻ കാണിച്ചിട്ട് ഒരു സോറി, പോടാ പട്ടി!`,
+        `സോറി മോളേ എന്നോ?! നിന്റെ മോളല്ല ഞാൻ, പോയി തുലയെടാ ചെറ്റ മൈരേ!`
+      ],
+      manglish: [
+        `Ninte aa unakka sorry ninte kayyil thanne vecho da myre! Thenditharam muzhuvan kaanichittu oru sorry, poda patti!`,
+        `"${quoted}" enno?! Ninte паஞ்சാര വർത്തമാനം എന്റെ അടുത്ത് വേണ്ടടാ പന്ന തെണ്ടി!`
+      ],
+      en: [
+        `Keep your fake "${quoted}" to yourself, da myre! You think one sorry fixes your nonsense, you bloody thendi?!`
+      ]
+    };
+    return pickUnique(bank[msgLang] || bank.ml);
+  }
+
+  // 7. General dynamic Mirror & One-Up quoting their exact input!
+  const general = isBoss ? {
+    ml: [
+      `"${quoted}" എന്നോ?! എന്താടാ മൈരേ നീ ഉരുളുന്നത്?! മര്യാദയ്ക്ക് പണി തീർത്തില്ലെങ്കിൽ നിന്നെ ഞാൻ പുറത്താക്കും തെണ്ടി!`,
+      `നിന്റെ "${quoted}" കേൾക്കാനല്ലടാ പന്ന പട്ടി ഞാൻ ഇവിടെ ഇരിക്കുന്നത്! പോയി ഫയൽ എടുക്കടാ മൈരേ!`,
+      `അധികം ഡയലോഗ് അടിക്കല്ലേടാ കോപ്പേ! "${quoted}" പോലും! നാണമില്ലേടാ കഴുതേ നിനക്ക്?!`,
+      `പോടാ മൈരേ! നിന്റെ ഈ "${quoted}" നാടകം എന്റെ അടുത്ത് ചെലവാകില്ല, പന്ന തെണ്ടി!`
+    ],
+    manglish: [
+      `"${quoted}" enno?! Enthaada myre nee urulunnathu?! Maryadhakku pani theerthillenkil ninne njan purathaakkum thendi!`,
+      `Ninte "${quoted}" kelkkaanallada panna patti njan ivide irikkunnathu! Poyi pani edukkedaa myre!`,
+      `Adhikam dialogue adikalleda koppe! "${quoted}" polum! Naanamilleda kazhuthe ninakku?!`,
+      `Poda myre! Ninte ee "${quoted}" naadakam ente aduthu chelavaakilla, kalla thendi!`
+    ],
+    en: [
+      `"${quoted}"?! What kind of pathetic excuse is that, da myre?! Stop wasting my time you lazy thendi!`,
+      `Don't give me that "${quoted}" nonsense da patti! Get back to work before I lose my mind!`
+    ]
+  } : {
+    ml: [
+      `"${quoted}" എന്നോ?! എന്താടാ മൈരേ നീ കരുതിയത്, ഞാൻ പൊട്ടിയാണെന്നോ?! നിന്റെ തരികിട നിർത്തടാ പന്ന തെണ്ടി!`,
+      `പോടാ പട്ടി! നിന്റെ "${quoted}" കേട്ട് എന്റെ തൊലി ഉരിയുന്നു! ഒരു ഉളുപ്പും ഇല്ലാതെ കള്ളം പറയുന്നോടാ ചെറ്റ മൈരേ?!`,
+      `ആഹാ, "${quoted}"! എന്ത് നല്ല കഥയാടാ കോപ്പേ! നിന്നെ വിശ്വസിച്ച എന്നെ പറഞ്ഞാൽ മതിയല്ലോ പന്ന കഴുതേ!`,
+      `മിണ്ടാതിരിക്കടാ മൈരേ! നിന്റെ "${quoted}" ഡയലോഗ് കേട്ട് മടുത്തു, പോയി തുലയ് തെണ്ടി!`
+    ],
+    manglish: [
+      `"${quoted}" enno?! Enthaada myre nee karuthiyathu, njan pottiyaanenno?! Ninte tharikida nirthada panna thendi!`,
+      `Poda patti! Ninte "${quoted}" kettu ente tholi uriyunnu! Oru uluppum illaathe kallam parayunnoda chetta myre?!`,
+      `Aaha, "${quoted}"! Enthu nalla kathayaada koppe! Ninne viswasicha enne paranjaal mathiyallo kazhuthe!`,
+      `Mindaathirikkada myre! Ninte "${quoted}" dialogue kettu maduthu, poyi thulayeda thendi!`
+    ],
+    en: [
+      `"${quoted}"?! Do you think I'm an idiot, da myre?! Stop lying to my face you shameless thendi!`,
+      `Oh really, "${quoted}"?! I'm sick and tired of your drama da patti, get lost!`
+    ]
+  };
+  return pickUnique(general[msgLang] || general.ml);
+}
 
 async function offlineImprovReply(userText, mySeq, typingBubble) {
   const isWin = /\b(i win|i won|njan jayichu|njan jeyichu)\b/i.test(userText) || userText.includes('ഞാൻ ജയിച്ചു');
-  const pack = STATIC_ROASTS[currentMode] || STATIC_ROASTS.boss;
-  let reply;
-  if (isWin) {
-    reply = pack.win[currentLang] || pack.win.ml;
+  const msgLang = detectMessageLang(userText, currentLang);
+
+  // Try live browser cloud AI first (Gemini key or Pollinations free OpenAI), fallback to contextual Kerala swearing engine
+  let reply = await fetchBrowserLiveAI(userText, msgLang, isWin, currentAbortController?.signal);
+  if (!reply) {
+    reply = generateContextualKeralaRoast(userText, msgLang, isWin);
   } else {
-    const pool = pack.lines[currentLang] || pack.lines.ml;
-    reply = pool[staticRoastIdx % pool.length];
-    staticRoastIdx++;
+    usedOfflineReplies.push(reply);
   }
 
-  await new Promise(r => setTimeout(r, 260));
   if (mySeq !== turnSeq) return;
 
   typingBubble.remove();
@@ -479,7 +843,8 @@ async function offlineImprovReply(userText, mySeq, typingBubble) {
     if (mySeq !== turnSeq) return;
     acc += (acc ? ' ' : '') + w;
     aiBubble.textContent = acc;
-    await new Promise(r => setTimeout(r, 45));
+    $('chat').scrollTop = $('chat').scrollHeight;
+    await new Promise(r => setTimeout(r, 38));
   }
   messages.push({ role: 'ai', text: reply });
   setExpression(isWin ? 'sulking' : 'angry');
@@ -504,9 +869,11 @@ async function sendMessage(rawText) {
   if (!text) return;
   if (rawText === undefined) input.value = '';
 
-  // Barge-in: cancel any ongoing reply/speech
   interrupt();
   const mySeq = ++turnSeq;
+
+  // Auto-adapt language if user types Manglish while Malayalam is selected
+  const detectedLang = detectMessageLang(text, currentLang);
 
   messages.push({ role: 'user', text });
   appendBubble('user', text);
@@ -514,7 +881,6 @@ async function sendMessage(rawText) {
   isThinking = true;
   setStageState('thinking');
 
-  // Show typing indicator bubble immediately
   const typingBubble = document.createElement('div');
   typingBubble.className = 'msg ai typing';
   typingBubble.innerHTML = '<i></i><i></i><i></i>';
@@ -523,10 +889,16 @@ async function sendMessage(rawText) {
 
   currentAbortController = new AbortController();
 
+  // If hosted on github.io, skip waiting for /api/chat/stream 404 and run live browser AI immediately
+  if (location.hostname.endsWith('github.io')) {
+    await offlineImprovReply(text, mySeq, typingBubble);
+    return;
+  }
+
   const payload = {
     mode: currentMode,
     intensity: currentIntensity,
-    lang: currentLang,
+    lang: detectedLang,
     session: session,
     provider: currentModelProvider,
     messages: messages
@@ -548,7 +920,7 @@ async function sendMessage(rawText) {
       return;
     }
 
-    if (res.status === 404 || res.status === 405) {
+    if (res.status === 404 || res.status === 405 || res.status >= 500) {
       await offlineImprovReply(text, mySeq, typingBubble);
       return;
     }
@@ -609,7 +981,6 @@ async function sendMessage(rawText) {
           aiBubble.textContent = accumulated;
           $('chat').scrollTop = $('chat').scrollHeight;
 
-          // Pipelined TTS: synthesize completed sentences immediately while streaming continues
           speechCursor = flushCompleteSentences(accumulated, speechCursor, mySeq);
         } else if (event.type === 'done') {
           typingBubble.remove();
@@ -624,7 +995,6 @@ async function sendMessage(rawText) {
           messages.push({ role: 'ai', text: finalReply });
           setExpression(event.expression || 'speaking');
 
-          // Speak any remaining tail that didn't end with punctuation
           const remainder = finalReply.slice(speechCursor).trim();
           if (remainder) {
             enqueueSentenceAudio(remainder, mySeq);
@@ -640,19 +1010,17 @@ async function sendMessage(rawText) {
             setTimeout(() => showRoundOver(finalReply), 950);
           }
         } else if (event.type === 'error') {
-          typingBubble.remove();
-          isThinking = false;
-          setStageState('idle');
-          appendBubble('ai', event.message || 'Model error. Try again.', 'error');
+          await offlineImprovReply(text, mySeq, typingBubble);
+          return;
         }
       }
     }
   } catch (err) {
-    typingBubble.remove();
-    if (err.name === 'AbortError') return;
-    isThinking = false;
-    setStageState('idle');
-    appendBubble('ai', 'Connection interrupted. Check server.', 'error');
+    if (err.name === 'AbortError') {
+      typingBubble.remove();
+      return;
+    }
+    await offlineImprovReply(text, mySeq, typingBubble);
   }
 }
 
@@ -681,6 +1049,7 @@ function resetRound(isFirst = false) {
   if (isFirst) {
     session = newSession();
     roundNumber = 1;
+    usedOfflineReplies = [];
   }
   const cfg = CHARACTERS[currentMode];
   updateRage(cfg.startAnger, 0);
@@ -710,6 +1079,12 @@ async function triggerRematch() {
   interrupt();
   const mySeq = ++turnSeq;
 
+  if (location.hostname.endsWith('github.io')) {
+    roundNumber++;
+    resetRound(false);
+    return;
+  }
+
   try {
     const res = await fetch('/api/rematch', {
       method: 'POST',
@@ -731,11 +1106,11 @@ async function triggerRematch() {
       appendBubble('ai', data.opener);
       setExpression('angry');
       enqueueSentenceAudio(data.opener, mySeq);
+      return;
     }
-  } catch (_) {
-    roundNumber++;
-    resetRound(false);
-  }
+  } catch (_) {}
+  roundNumber++;
+  resetRound(false);
 }
 
 // Speech Recognition (Browser STT)
@@ -790,7 +1165,7 @@ function toggleMic() {
     speechRecognizer.lang = currentLang === 'ml' ? 'ml-IN' : (currentLang === 'manglish' ? 'en-IN' : 'en-US');
     try {
       speechRecognizer.start();
-    } catch (_) { }
+    } catch (_) {}
   }
 }
 
@@ -818,9 +1193,16 @@ function closeSettings() {
 
 // Load server config
 async function loadConfig() {
+  if (location.hostname.endsWith('github.io')) {
+    syncModelChips('LIVE AI');
+    return;
+  }
   try {
     const res = await fetch('/api/config', { headers: authHeaders() });
-    if (!res.ok) return;
+    if (!res.ok) {
+      syncModelChips('LIVE AI');
+      return;
+    }
     const cfg = await res.json();
     currentModelProvider = cfg.default_provider || 'ollama';
     syncModelChips();
@@ -836,7 +1218,9 @@ async function loadConfig() {
     if (cfg.auth_required && !cfg.authenticated) {
       $('gate').hidden = false;
     }
-  } catch (_) { }
+  } catch (_) {
+    syncModelChips('LIVE AI');
+  }
 }
 
 // ============================================================================
@@ -917,6 +1301,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!voiceOutEnabled) interrupt();
   });
 
+  // Gemini API Key input (for GitHub Pages direct cloud mode)
+  if ($('geminiKeyInput')) {
+    $('geminiKeyInput').value = getGeminiKey();
+    $('geminiKeyInput').addEventListener('input', e => {
+      setGeminiKey(e.target.value);
+    });
+  }
+
   // Passcode input
   $('passcodeInput').value = getPasscode();
   $('passcodeInput').addEventListener('input', e => {
@@ -967,6 +1359,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => { });
+    navigator.serviceWorker.register('static/sw.js').catch(() => {});
   });
 }

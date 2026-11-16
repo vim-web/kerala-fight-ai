@@ -20,7 +20,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Malayalam:wght@400;600;700&family=Russo+One&display=swap"
     rel="stylesheet">
-  <link rel="stylesheet" href="static/styles.css?v=4">
+  <link rel="stylesheet" href="static/styles.css?v=5">
 </head>
 
 <body>
@@ -42,8 +42,8 @@
         <span class="brand-name">KERALA <b>FIGHT</b></span>
       </div>
       <div class="top-actions">
-        <button class="model-chip" id="modelChipSelect" type="button" aria-label="Model in use. Open settings.">
-          <span class="dot"></span><span class="model-label">…</span>
+        <button class="model-chip is-cloud" id="modelChipSelect" type="button" aria-label="Model in use. Open settings.">
+          <span class="dot"></span><span class="model-label">LIVE AI</span>
         </button>
         <button class="icon-btn" data-open-settings type="button" aria-label="Settings">
           <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"
@@ -97,10 +97,9 @@
         <div class="segmented" role="radiogroup" aria-labelledby="intLabel" data-group="intensity">
           <button type="button" role="radio" data-value="1"
             aria-checked="false"><b>Mild</b><small>sarcastic</small></button>
-          <button type="button" role="radio" data-value="2" aria-checked="true"
-            class="is-on"><b>Spicy</b><small>everyday fury</small></button>
-          <button type="button" role="radio" data-value="3" aria-checked="false"><b>Full roast</b><small>da myre
-              level</small></button>
+          <button type="button" role="radio" data-value="2" aria-checked="false"><b>Spicy</b><small>everyday fury</small></button>
+          <button type="button" role="radio" data-value="3" aria-checked="true"
+            class="is-on"><b>Full roast</b><small>da myre level</small></button>
         </div>
       </div>
 
@@ -177,8 +176,8 @@
         <div class="stage-meta">
           <span class="state-chip" id="stateChip" role="status" aria-live="polite"><span class="dot"></span><span
               id="stateText">Ready</span></span>
-          <button class="model-chip" id="modelChipFight" type="button" aria-label="Model in use. Open settings.">
-            <span class="dot"></span><span class="model-label">…</span>
+          <button class="model-chip is-cloud" id="modelChipFight" type="button" aria-label="Model in use. Open settings.">
+            <span class="dot"></span><span class="model-label">LIVE AI</span>
           </button>
         </div>
       </div>
@@ -282,9 +281,15 @@
       </div>
 
       <div class="set-group">
+        <label class="set-label" for="geminiKeyInput">Gemini API Key (for GitHub Pages Cloud AI)</label>
+        <input id="geminiKeyInput" class="field" type="password"
+          placeholder="Optional: Paste AIza... key for Gemini" autocomplete="off">
+      </div>
+
+      <div class="set-group">
         <label class="set-label" for="passcodeInput">Network passcode</label>
         <input id="passcodeInput" class="field" type="password" inputmode="numeric"
-          placeholder="Only needed on your phone" autocomplete="off">
+          placeholder="Only needed on local Wi-Fi" autocomplete="off">
       </div>
 
       <div class="set-group set-actions">
@@ -292,8 +297,7 @@
         <a class="btn-ghost" id="exportBtn" href="/api/history/export" download>Export history</a>
         <button class="btn-danger" id="resetWinsBtn" type="button">Reset wins</button>
       </div>
-      <p class="set-hint">Cloud mode sends your messages to Google's Gemini API. Voice uses Microsoft Edge's online
-        voices. API keys stay on the server.</p>
+      <p class="set-hint">Cloud mode sends your messages to the AI provider. API keys entered here are saved only on your device.</p>
     </div>
   </aside>
 
@@ -315,7 +319,7 @@
   <div class="toasts" id="toasts" role="status" aria-live="polite"></div>
   <audio id="voice" preload="auto" playsinline></audio>
 
-  <script src="static/app.js?v=4" defer></script>
+  <script src="static/app.js?v=5" defer></script>
 </body>
 
 </html>
